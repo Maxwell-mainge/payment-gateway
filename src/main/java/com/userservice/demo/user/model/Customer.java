@@ -1,4 +1,4 @@
-package com.wallet.demo.user;
+package com.userservice.demo.user.model;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -7,8 +7,8 @@ import java.time.LocalDateTime;
 
 @Data
 @Entity
-@Table(name = "users")
-public class User {
+@Table(name = "customers")
+public class Customer {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,18 +37,12 @@ public class User {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private AccountStatus accountStatus = AccountStatus.PENDING;
 
     private boolean emailVerified = false;
     private boolean phoneVerified = false;
-
     private int failedLoginAttempts = 0;
     private LocalDateTime lastLoginAt;
-
     private boolean termsAccepted = false;
     private LocalDateTime termsAcceptedAt;
 
@@ -65,10 +59,6 @@ public class User {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-    public enum Role {
-        CUSTOMER, MERCHANT, ADMIN
     }
 
     public enum AccountStatus {
