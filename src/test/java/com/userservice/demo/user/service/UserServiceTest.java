@@ -20,6 +20,7 @@ import com.userservice.demo.user.dto.AuthResponse;
 import com.userservice.demo.user.dto.LoginRequest;
 import com.userservice.demo.security.JwtUtil;
 import java.util.Optional;
+import com.userservice.demo.otp.service.OtpService;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -38,6 +39,9 @@ class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
+
+    @Mock
+    private OtpService otpService;
 
     @Test
     void shouldRegisterCustomerSuccessfully() {
@@ -127,13 +131,13 @@ class UserServiceTest {
                 .thenReturn(Optional.of(customer));
         when(passwordEncoder.matches("Password123", "encodedPassword"))
                 .thenReturn(true);
-        when(jwtUtil.generateToken("max@gmail.com", "CUSTOMER"))
+        when(jwtUtil.generateAccessToken("max@gmail.com", "CUSTOMER"))
                 .thenReturn("mockToken");
 
         AuthResponse response = userService.login(request);
 
         assertNotNull(response);
-        assertEquals("mockToken", response.getToken());
+        assertEquals("mockToken", response.getAccessToken());
         assertEquals("CUSTOMER", response.getRole());
     }
 
