@@ -16,6 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import com.userservice.demo.user.dto.AuthResponse;
+import com.userservice.demo.user.dto.LoginRequest;
+import com.userservice.demo.security.JwtUtil;
+import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -28,6 +32,9 @@ class UserServiceTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private JwtUtil jwtUtil;
 
     @InjectMocks
     private UserService userService;
@@ -103,5 +110,51 @@ class UserServiceTest {
         assertEquals("John's Shop", result.getBusinessName());
         assertEquals(Merchant.VerificationStatus.PENDING, result.getVerificationStatus());
         verify(merchantRepository, times(1)).save(any(Merchant.class));
+    }
+    @Test
+    void shouldLoginCustomerSuccessfully() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("max@gmail.com");
+        request.setPassword("Password123");
+
+        Customer customer = new Customer();
+        customer.setEmail("max@gmail.com");
+        customer.setPassword("encodedPassword");
+        customer.setFullName("Maxwell Mainge");
+        customer.setAccountStatus(Customer.AccountStatus.ACTIVE);
+
+        when(customerRepository.findByEmail("max@gmail.com"))
+                .thenReturn(Optional.of(customer));
+        when(passwordEncoder.matches("Password123", "encodedPassword"))
+                .thenReturn(true);
+        when(jwtUtil.generateToken("max@gmail.com", "CUSTOMER"))
+                .thenReturn("mockToken");
+
+        AuthResponse response = userService.login(request);
+
+        assertNotNull(response);
+        assertEquals("mockToken", response.getToken());
+        assertEquals("CUSTOMER", response.getRole());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenPasswordIsWrong() {
+        LoginRequest request = new LoginRequest();
+        request.setEmail("max@gmail.com");
+        request.setPassword("wrongpassword");
+
+        Customer customer = new Customer();
+        customer.setEmail("max@gmail.com");
+        customer.setPassword("encodedPassword");
+        customer.setAccountStatus(Customer.AccountStatus.ACTIVE);
+
+        when(customerRepository.findByEmail("max@gmail.com"))
+                .thenReturn(Optional.of(customer));
+        when(passwordEncoder.matches("wrongpassword", "encodedPassword"))
+                .thenReturn(false);
+
+        assertThrows(RuntimeException.class, () -> {
+            userService.login(request);
+        });
     }
 }
