@@ -108,7 +108,7 @@ public class UserService {
         merchant.setBankAccountNumber(request.getBankAccountNumber());
         merchant.setBankAccountHolderName(request.getBankAccountHolderName());
         merchant.setAccountStatus(Merchant.AccountStatus.PENDING);
-        merchant.setVerificationStatus(Merchant.VerificationStatus.PENDING);
+        merchant.setVerificationStatus(Merchant.VerificationStatus.VERIFIED);
         merchant.setTermsAccepted(true);
         merchant.setTermsAcceptedAt(LocalDateTime.now());
 
@@ -144,12 +144,33 @@ public class UserService {
         // Check customers first
         Optional<Customer> customer = customerRepository.findByEmail(request.getEmail());
         if (customer.isPresent()) {
-            if (!passwordEncoder.matches(request.getPassword(), customer.get().getPassword())) {
-                throw new RuntimeException("Invalid password");
-            }
+            // Check if account is suspended
             if (customer.get().getAccountStatus() == Customer.AccountStatus.SUSPENDED) {
-                throw new RuntimeException("Account is suspended");
+                throw new RuntimeException("Account is suspended. Contact admin to unlock");
             }
+
+            // Check password
+            if (!passwordEncoder.matches(request.getPassword(), customer.get().getPassword())) {
+                // Increment failed attempts
+                int attempts = customer.get().getFailedLoginAttempts() + 1;
+                customer.get().setFailedLoginAttempts(attempts);
+
+                // Lock account after 5 failed attempts
+                if (attempts >= 5) {
+                    customer.get().setAccountStatus(Customer.AccountStatus.SUSPENDED);
+                    customerRepository.save(customer.get());
+                    throw new RuntimeException("Maximum attempts reached. Contact admin to unlock");
+                }
+
+                customerRepository.save(customer.get());
+                throw new RuntimeException("Invalid password. " + (5 - attempts) + " attempts remaining");
+            }
+
+            // Reset failed attempts on successful login
+            customer.get().setFailedLoginAttempts(0);
+            customer.get().setLastLoginAt(LocalDateTime.now());
+            customerRepository.save(customer.get());
+
             String accessToken = jwtUtil.generateAccessToken(customer.get().getEmail(), "CUSTOMER");
             String refreshToken = jwtUtil.generateRefreshToken(customer.get().getEmail());
             return new AuthResponse(accessToken, refreshToken, "CUSTOMER", customer.get().getFullName());
@@ -158,12 +179,33 @@ public class UserService {
         // Check merchants
         Optional<Merchant> merchant = merchantRepository.findByEmail(request.getEmail());
         if (merchant.isPresent()) {
-            if (!passwordEncoder.matches(request.getPassword(), merchant.get().getPassword())) {
-                throw new RuntimeException("Invalid password");
-            }
+            // Check if account is suspended
             if (merchant.get().getAccountStatus() == Merchant.AccountStatus.SUSPENDED) {
-                throw new RuntimeException("Account is suspended");
+                throw new RuntimeException("Account is suspended. Contact admin to unlock");
             }
+
+            // Check password
+            if (!passwordEncoder.matches(request.getPassword(), merchant.get().getPassword())) {
+                // Increment failed attempts
+                int attempts = merchant.get().getFailedLoginAttempts() + 1;
+                merchant.get().setFailedLoginAttempts(attempts);
+
+                // Lock account after 5 failed attempts
+                if (attempts >= 5) {
+                    merchant.get().setAccountStatus(Merchant.AccountStatus.SUSPENDED);
+                    merchantRepository.save(merchant.get());
+                    throw new RuntimeException("Maximum attempts reached. Contact admin to unlock");
+                }
+
+                merchantRepository.save(merchant.get());
+                throw new RuntimeException("Invalid password. " + (5 - attempts) + " attempts remaining");
+            }
+
+            // Reset failed attempts on successful login
+            merchant.get().setFailedLoginAttempts(0);
+            merchant.get().setLastLoginAt(LocalDateTime.now());
+            merchantRepository.save(merchant.get());
+
             String accessToken = jwtUtil.generateAccessToken(merchant.get().getEmail(), "MERCHANT");
             String refreshToken = jwtUtil.generateRefreshToken(merchant.get().getEmail());
             return new AuthResponse(accessToken, refreshToken, "MERCHANT", merchant.get().getFullName());
