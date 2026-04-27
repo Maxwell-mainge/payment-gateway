@@ -18,6 +18,8 @@ import com.userservice.demo.security.JwtUtil;
 import java.util.Optional;
 import com.userservice.demo.otp.service.OtpService;
 import com.userservice.demo.otp.model.OtpRecord;
+import com.userservice.demo.admin.model.Admin;
+import com.userservice.demo.admin.repository.AdminRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final OtpService otpService;
+    private final AdminRepository adminRepository;
 
     public Customer registerCustomer(RegisterRequest request) {
         if (customerRepository.existsByEmail(request.getEmail())) {
@@ -167,6 +170,16 @@ public class UserService {
             String accessToken = jwtUtil.generateAccessToken(merchant.get().getEmail(), "MERCHANT");
             String refreshToken = jwtUtil.generateRefreshToken(merchant.get().getEmail());
             return new AuthResponse(accessToken, refreshToken, "MERCHANT", merchant.get().getFullName());
+        }
+        // Check admin
+        Optional<Admin> admin = adminRepository.findByEmail(request.getEmail());
+        if (admin.isPresent()) {
+            if (!passwordEncoder.matches(request.getPassword(), admin.get().getPassword())) {
+                throw new RuntimeException("Invalid password");
+            }
+            String accessToken = jwtUtil.generateAccessToken(admin.get().getEmail(), "ADMIN");
+            String refreshToken = jwtUtil.generateRefreshToken(admin.get().getEmail());
+            return new AuthResponse(accessToken, refreshToken, "ADMIN", admin.get().getFullName());
         }
 
         throw new RuntimeException("User not found");
