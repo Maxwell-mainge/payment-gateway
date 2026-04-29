@@ -33,16 +33,13 @@ public class PasswordResetController {
     /**
      * Resets password using a valid reset token.
      * Public endpoint - no authentication required.
-     * Email passed as query parameter alongside the token.
+     * Email included in request body.
      */
     @PostMapping("/reset")
-    public ResponseEntity<String> resetPassword(
-            @RequestParam String email,
-            @RequestBody ResetPasswordRequest request) {
-        passwordResetService.resetPassword(email, request);
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequest request) {
+        passwordResetService.resetPassword(request);
         return ResponseEntity.ok("Password reset successfully");
     }
-
     /**
      * Changes password for a logged-in user.
      * Requires valid JWT token - protected endpoint.

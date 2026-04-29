@@ -78,19 +78,16 @@ public class PasswordResetService {
      *
      * @param request contains the reset token and new password
      */
-    public void resetPassword(ResetPasswordRequest request) {
-        // Find which email this token belongs to
-        // We store token by email so we need email in request
-        throw new RuntimeException("Email is required for password reset");
-    }
+
 
     /**
-     * Resets password using email and reset token.
+     * Resets password using email and reset token from request body.
      *
-     * @param email the email address of the account
-     * @param request contains token and new password
+     * @param request contains email, token and new password
      */
-    public void resetPassword(String email, ResetPasswordRequest request) {
+    public void resetPassword(ResetPasswordRequest request) {
+        String email = request.getEmail();
+
         // Get token from Redis
         String redisKey = "reset:password:" + email;
         String storedToken = redisTemplate.opsForValue().get(redisKey);
@@ -117,7 +114,6 @@ public class PasswordResetService {
             merchantRepository.save(merchant);
         });
     }
-
     /**
      * Changes password for a logged-in user.
      * Requires old password verification before updating.
