@@ -11,7 +11,7 @@ import java.util.Date;
 public class JwtUtil {
 
     private static final String SECRET_KEY = "paymentgatewaysecretkey1234567890123456";
-    private static final long ACCESS_TOKEN_EXPIRY = 300000; // 5 minutes
+    private static final long ACCESS_TOKEN_EXPIRY = 1800000; // 30 minutes
     private static final long REFRESH_TOKEN_EXPIRY = 172800000; // 2 days
 
     private Key getSigningKey() {

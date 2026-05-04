@@ -1,5 +1,7 @@
 package com.userservice.demo.profile.service;
 
+import com.userservice.demo.exception.DuplicateResourceException;
+import com.userservice.demo.exception.ResourceNotFoundException;
 import com.userservice.demo.profile.dto.UpdateCustomerRequest;
 import com.userservice.demo.profile.dto.UpdateMerchantRequest;
 import com.userservice.demo.user.model.Customer;
@@ -24,27 +26,22 @@ public class ProfileService {
     /**
      * Updates a customer's profile details.
      * Only fullName, phoneNumber and dateOfBirth can be updated.
-     *
-     * @param email   the email of the logged in customer from JWT
-     * @param request the updated profile details
-     * @return the updated Customer object
      */
     public Customer updateCustomerProfile(String email, UpdateCustomerRequest request) {
-        Customer customer = customerRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+        Customer customer = customerRepository.findByAuthUser_Email(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
 
-        // Check if new phone number is already taken by another customer
         if (request.getPhoneNumber() != null &&
+                !request.getPhoneNumber().isEmpty() &&
                 !request.getPhoneNumber().equals(customer.getPhoneNumber()) &&
                 customerRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new RuntimeException("Phone number already in use");
+            throw new DuplicateResourceException("Phone number already in use");
         }
 
-        // Update allowed fields only
-        if (request.getFullName() != null) {
+        if (request.getFullName() != null && !request.getFullName().isEmpty()) {
             customer.setFullName(request.getFullName());
         }
-        if (request.getPhoneNumber() != null) {
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
             customer.setPhoneNumber(request.getPhoneNumber());
         }
         if (request.getDateOfBirth() != null) {
@@ -57,42 +54,37 @@ public class ProfileService {
     /**
      * Updates a merchant's profile details.
      * Only fullName, phoneNumber, dateOfBirth and business details can be updated.
-     *
-     * @param email   the email of the logged in merchant from JWT
-     * @param request the updated profile details
-     * @return the updated Merchant object
      */
     public Merchant updateMerchantProfile(String email, UpdateMerchantRequest request) {
-        Merchant merchant = merchantRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Merchant not found"));
+        Merchant merchant = merchantRepository.findByAuthUser_Email(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Merchant not found"));
 
-        // Check if new phone number is already taken by another merchant
         if (request.getPhoneNumber() != null &&
+                !request.getPhoneNumber().isEmpty() &&
                 !request.getPhoneNumber().equals(merchant.getPhoneNumber()) &&
                 merchantRepository.existsByPhoneNumber(request.getPhoneNumber())) {
-            throw new RuntimeException("Phone number already in use");
+            throw new DuplicateResourceException("Phone number already in use");
         }
 
-        // Update allowed fields only
-        if (request.getFullName() != null) {
+        if (request.getFullName() != null && !request.getFullName().isEmpty()) {
             merchant.setFullName(request.getFullName());
         }
-        if (request.getPhoneNumber() != null) {
+        if (request.getPhoneNumber() != null && !request.getPhoneNumber().isEmpty()) {
             merchant.setPhoneNumber(request.getPhoneNumber());
         }
         if (request.getDateOfBirth() != null) {
             merchant.setDateOfBirth(request.getDateOfBirth());
         }
-        if (request.getBusinessName() != null) {
+        if (request.getBusinessName() != null && !request.getBusinessName().isEmpty()) {
             merchant.setBusinessName(request.getBusinessName());
         }
-        if (request.getBankName() != null) {
+        if (request.getBankName() != null && !request.getBankName().isEmpty()) {
             merchant.setBankName(request.getBankName());
         }
-        if (request.getBankAccountNumber() != null) {
+        if (request.getBankAccountNumber() != null && !request.getBankAccountNumber().isEmpty()) {
             merchant.setBankAccountNumber(request.getBankAccountNumber());
         }
-        if (request.getBankAccountHolderName() != null) {
+        if (request.getBankAccountHolderName() != null && !request.getBankAccountHolderName().isEmpty()) {
             merchant.setBankAccountHolderName(request.getBankAccountHolderName());
         }
 

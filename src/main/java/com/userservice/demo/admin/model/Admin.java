@@ -1,11 +1,13 @@
 package com.userservice.demo.admin.model;
 
+import com.userservice.demo.auth.model.AuthUser;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
  * Represents the admin account in the system.
+ * Authentication is handled by AuthUser.
  * Only one admin account exists, created on app startup.
  */
 @Data
@@ -17,19 +19,14 @@ public class Admin {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Admin's full name */
+    /** Reference to the authentication user account */
+    @OneToOne
+    @JoinColumn(name = "auth_user_id", nullable = false)
+    private AuthUser authUser;
+
     @Column(nullable = false)
     private String fullName;
 
-    /** Admin's email - used for login */
-    @Column(nullable = false, unique = true)
-    private String email;
-
-    /** Admin's encrypted password */
-    @Column(nullable = false)
-    private String password;
-
-    /** Timestamp when admin account was created */
     @Column(updatable = false)
     private LocalDateTime createdAt;
 

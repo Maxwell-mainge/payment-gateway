@@ -8,7 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.List;import org.springframework.data.domain.Page;
 
 /**
  * Controller for admin operations.
@@ -22,10 +22,12 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    /** Get all customers */
+    /** Get all customers with pagination */
     @GetMapping("/customers")
-    public ResponseEntity<List<Customer>> getAllCustomers() {
-        return ResponseEntity.ok(adminService.getAllCustomers());
+    public ResponseEntity<Page<Customer>> getAllCustomers(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllCustomers(page, size));
     }
 
     /** Get customer by ID */
@@ -62,10 +64,12 @@ public class AdminController {
         return ResponseEntity.ok("Customer deleted successfully");
     }
 
-    /** Get all merchants */
+    /** Get all merchants with pagination */
     @GetMapping("/merchants")
-    public ResponseEntity<List<Merchant>> getAllMerchants() {
-        return ResponseEntity.ok(adminService.getAllMerchants());
+    public ResponseEntity<Page<Merchant>> getAllMerchants(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(adminService.getAllMerchants(page, size));
     }
 
     /** Get merchant by ID */

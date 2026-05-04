@@ -2,6 +2,8 @@ package com.userservice.demo;
 
 import com.userservice.demo.admin.model.Admin;
 import com.userservice.demo.admin.repository.AdminRepository;
+import com.userservice.demo.auth.model.AuthUser;
+import com.userservice.demo.auth.repository.AuthUserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -33,15 +35,24 @@ public class DemoApplication {
 	 */
 	@Bean
 	public CommandLineRunner createDefaultAdmin(
+			AuthUserRepository authUserRepository,
 			AdminRepository adminRepository,
 			PasswordEncoder passwordEncoder) {
 		return args -> {
-			if (!adminRepository.existsByEmail("admin@gateway.com")) {
+			if (!authUserRepository.existsByEmail("admin@gateway.com")) {
+				// Create auth user for admin
+				AuthUser authUser = new AuthUser();
+				authUser.setEmail("admin@gateway.com");
+				authUser.setPassword(passwordEncoder.encode("Admin@1234"));
+				authUser.setRole(AuthUser.Role.ADMIN);
+				AuthUser savedAuthUser = authUserRepository.save(authUser);
+
+				// Create admin profile
 				Admin admin = new Admin();
+				admin.setAuthUser(savedAuthUser);
 				admin.setFullName("System Admin");
-				admin.setEmail("admin@gateway.com");
-				admin.setPassword(passwordEncoder.encode("Admin@1234"));
 				adminRepository.save(admin);
+
 				System.out.println("===========================================");
 				System.out.println("Default admin account created");
 				System.out.println("Email: admin@gateway.com");

@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.*;import jakarta.validation.Valid;
 
 /**
  * Controller for profile update endpoints.
@@ -31,7 +31,7 @@ public class ProfileController {
     @PreAuthorize("hasRole('CUSTOMER')")
     public ResponseEntity<Customer> updateCustomerProfile(
             @AuthenticationPrincipal String email,
-            @RequestBody UpdateCustomerRequest request) {
+            @Valid @RequestBody UpdateCustomerRequest request) {
         return ResponseEntity.ok(profileService.updateCustomerProfile(email, request));
     }
 
@@ -44,7 +44,7 @@ public class ProfileController {
     @PreAuthorize("hasRole('MERCHANT')")
     public ResponseEntity<Merchant> updateMerchantProfile(
             @AuthenticationPrincipal String email,
-            @RequestBody UpdateMerchantRequest request) {
+            @Valid @RequestBody UpdateMerchantRequest request) {
         return ResponseEntity.ok(profileService.updateMerchantProfile(email, request));
     }
 }
