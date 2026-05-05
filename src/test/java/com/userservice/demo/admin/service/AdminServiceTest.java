@@ -1,5 +1,7 @@
 package com.userservice.demo.admin.service;
 
+import com.userservice.demo.exception.BadRequestException;
+import com.userservice.demo.exception.ResourceNotFoundException;
 import com.userservice.demo.user.model.Customer;
 import com.userservice.demo.user.model.Merchant;
 import com.userservice.demo.user.repository.CustomerRepository;
@@ -44,6 +46,17 @@ class AdminServiceTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenCustomerAlreadySuspended() {
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setAccountStatus(Customer.AccountStatus.SUSPENDED);
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+
+        assertThrows(BadRequestException.class, () -> adminService.suspendCustomer(1L));
+    }
+
+    @Test
     void shouldUnlockCustomerSuccessfully() {
         Customer customer = new Customer();
         customer.setId(1L);
@@ -64,7 +77,7 @@ class AdminServiceTest {
     void shouldThrowExceptionWhenCustomerNotFound() {
         when(customerRepository.findById(99L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> adminService.suspendCustomer(99L));
+        assertThrows(ResourceNotFoundException.class, () -> adminService.suspendCustomer(99L));
     }
 
     @Test
@@ -80,5 +93,32 @@ class AdminServiceTest {
 
         assertEquals(Merchant.AccountStatus.SUSPENDED, merchant.getAccountStatus());
         verify(merchantRepository, times(1)).save(merchant);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenMerchantAlreadySuspended() {
+        Merchant merchant = new Merchant();
+        merchant.setId(1L);
+        merchant.setAccountStatus(Merchant.AccountStatus.SUSPENDED);
+
+        when(merchantRepository.findById(1L)).thenReturn(Optional.of(merchant));
+
+        assertThrows(BadRequestException.class, () -> adminService.suspendMerchant(1L));
+    }
+
+    @Test
+    void shouldSoftDeleteCustomerSuccessfully() {
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setAccountStatus(Customer.AccountStatus.ACTIVE);
+
+        when(customerRepository.findById(1L)).thenReturn(Optional.of(customer));
+        when(customerRepository.save(any(Customer.class))).thenReturn(customer);
+
+        adminService.deleteCustomer(1L);
+
+        assertEquals(Customer.AccountStatus.CLOSED, customer.getAccountStatus());
+        assertNotNull(customer.getDeletedAt());
+        verify(customerRepository, times(1)).save(customer);
     }
 }
