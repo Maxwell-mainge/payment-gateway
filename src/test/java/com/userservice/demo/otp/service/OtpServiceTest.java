@@ -1,5 +1,6 @@
 package com.userservice.demo.otp.service;
 
+import com.userservice.demo.exception.BadRequestException;
 import com.userservice.demo.otp.dto.VerifyOtpRequest;
 import com.userservice.demo.otp.model.OtpRecord;
 import com.userservice.demo.otp.repository.OtpRepository;
@@ -54,20 +55,20 @@ class OtpServiceTest {
     }
 
     @Test
-    void shouldVerifyOtpAndActivateAccount() {
+    void shouldVerifyEmailOtpAndSetEmailVerified() {
         VerifyOtpRequest request = new VerifyOtpRequest();
         request.setRecipient("max@gmail.com");
         request.setOtpType("EMAIL");
         request.setOtpCode("123456");
 
         Customer customer = new Customer();
-        customer.setEmail("max@gmail.com");
+        customer.setEmailVerified(false);
         customer.setPhoneVerified(true);
         customer.setAccountStatus(Customer.AccountStatus.PENDING);
 
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("otp:email:max@gmail.com")).thenReturn("123456");
-        when(customerRepository.findByEmail("max@gmail.com")).thenReturn(Optional.of(customer));
+        when(customerRepository.findByAuthUser_Email("max@gmail.com")).thenReturn(Optional.of(customer));
         when(otpRepository.findByRecipientAndOtpTypeAndStatus(any(), any(), any()))
                 .thenReturn(Optional.empty());
 
@@ -88,7 +89,7 @@ class OtpServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("otp:email:max@gmail.com")).thenReturn(null);
 
-        assertThrows(RuntimeException.class, () -> otpService.verifyOtp(request));
+        assertThrows(BadRequestException.class, () -> otpService.verifyOtp(request));
     }
 
     @Test
@@ -101,6 +102,6 @@ class OtpServiceTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         when(valueOperations.get("otp:email:max@gmail.com")).thenReturn("123456");
 
-        assertThrows(RuntimeException.class, () -> otpService.verifyOtp(request));
+        assertThrows(BadRequestException.class, () -> otpService.verifyOtp(request));
     }
-}                                                                                           
+}

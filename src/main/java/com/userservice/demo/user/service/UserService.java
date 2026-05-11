@@ -62,14 +62,12 @@ public class UserService {
             throw new BadRequestException("You must accept the terms and conditions");
         }
 
-        // Create auth user
         AuthUser authUser = new AuthUser();
         authUser.setEmail(request.getEmail());
         authUser.setPassword(passwordEncoder.encode(request.getPassword()));
         authUser.setRole(AuthUser.Role.CUSTOMER);
         AuthUser savedAuthUser = authUserRepository.save(authUser);
 
-        // Create customer business profile
         Customer customer = new Customer();
         customer.setAuthUser(savedAuthUser);
         customer.setFullName(request.getFullName());
@@ -83,7 +81,6 @@ public class UserService {
 
         Customer savedCustomer = customerRepository.save(customer);
 
-        // Send OTPs
         otpService.generateOtp(savedAuthUser.getEmail(), OtpRecord.OtpType.EMAIL);
         otpService.generateOtp(savedCustomer.getPhoneNumber(), OtpRecord.OtpType.PHONE);
 
@@ -118,14 +115,12 @@ public class UserService {
             throw new BadRequestException("You must accept the terms and conditions");
         }
 
-        // Create auth user
         AuthUser authUser = new AuthUser();
         authUser.setEmail(request.getEmail());
         authUser.setPassword(passwordEncoder.encode(request.getPassword()));
         authUser.setRole(AuthUser.Role.MERCHANT);
         AuthUser savedAuthUser = authUserRepository.save(authUser);
 
-        // Create merchant business profile
         Merchant merchant = new Merchant();
         merchant.setAuthUser(savedAuthUser);
         merchant.setFullName(request.getFullName());
@@ -147,7 +142,6 @@ public class UserService {
 
         Merchant savedMerchant = merchantRepository.save(merchant);
 
-        // Send OTPs
         otpService.generateOtp(savedAuthUser.getEmail(), OtpRecord.OtpType.EMAIL);
         otpService.generateOtp(savedMerchant.getPhoneNumber(), OtpRecord.OtpType.PHONE);
 
@@ -156,19 +150,15 @@ public class UserService {
 
     /**
      * Authenticates a user and returns JWT tokens.
-     * Loads AuthUser then checks business model for account status.
      */
     public AuthResponse login(LoginRequest request) {
-        // Find auth user
         AuthUser authUser = authUserRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
-        // Verify password
         if (!passwordEncoder.matches(request.getPassword(), authUser.getPassword())) {
             handleFailedLogin(authUser);
         }
 
-        // Check role and get business profile
         switch (authUser.getRole()) {
             case CUSTOMER -> {
                 Customer customer = customerRepository.findByAuthUser(authUser)
@@ -207,7 +197,6 @@ public class UserService {
 
     /**
      * Handles failed login attempts.
-     * Increments counter and locks account after 5 failures.
      */
     private void handleFailedLogin(AuthUser authUser) {
         if (authUser.getRole() == AuthUser.Role.CUSTOMER) {

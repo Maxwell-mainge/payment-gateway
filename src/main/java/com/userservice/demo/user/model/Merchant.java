@@ -2,6 +2,8 @@ package com.userservice.demo.user.model;
 
 import com.userservice.demo.auth.model.AuthUser;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -90,6 +92,12 @@ public class Merchant {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void setEmail(@NotBlank(message = "Email is required") @Email(message = "Email must be valid") String email) {
+    }
+
+    public void setPassword(String encode) {
     }
 
     public enum VerificationStatus {
