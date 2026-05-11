@@ -1,10 +1,16 @@
 package com.userservice.demo.user.model;
 
+import com.userservice.demo.auth.model.AuthUser;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+/**
+ * Represents a merchant in the payment gateway.
+ * Authentication is handled by AuthUser.
+ * This model stores merchant specific business data.
+ */
 @Data
 @Entity
 @Table(name = "merchants")
@@ -14,17 +20,16 @@ public class Merchant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /** Reference to the authentication user account */
+    @OneToOne
+    @JoinColumn(name = "auth_user_id", nullable = false)
+    private AuthUser authUser;
+
     @Column(nullable = false)
     private String fullName;
 
     @Column(nullable = false, unique = true)
-    private String email;
-
-    @Column(nullable = false, unique = true)
     private String phoneNumber;
-
-    @Column(nullable = false)
-    private String password;
 
     @Column(nullable = false, unique = true)
     private String nationalId;
@@ -58,7 +63,7 @@ public class Merchant {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private VerificationStatus verificationStatus = VerificationStatus.PENDING;
+    private VerificationStatus verificationStatus = VerificationStatus.VERIFIED;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -70,6 +75,7 @@ public class Merchant {
     private LocalDateTime lastLoginAt;
     private boolean termsAccepted = false;
     private LocalDateTime termsAcceptedAt;
+    private LocalDateTime deletedAt;
 
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -103,4 +103,4 @@ class OtpServiceTest {
 
         assertThrows(RuntimeException.class, () -> otpService.verifyOtp(request));
     }
-}
+}                                                                                           
