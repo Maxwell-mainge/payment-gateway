@@ -41,7 +41,7 @@ public class OtpService {
      * Prints the OTP to console (mocking email/SMS sending).
      */
     public String generateOtp(String recipient, OtpRecord.OtpType otpType) {
-        String otpCode = String.format("%06d", new Random().nextInt(999999));
+        String otpCode = "123456"; // Static OTP for development
 
         long expiryMinutes = otpType == OtpRecord.OtpType.EMAIL
                 ? EMAIL_OTP_EXPIRY_MINUTES
